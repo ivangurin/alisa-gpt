@@ -1,0 +1,8 @@
+# Не попадает в docker-контекст: секреты и локальные артефакты.
+.env
+.env.*
+!.env.example
+bin/
+coverage.out
+coverage.out.tmp
+.git/
