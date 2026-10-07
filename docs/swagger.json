@@ -1,0 +1,198 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Навык Яндекс.Алисы для голосового общения с ChatGPT: вебхук протокола Яндекс.Диалогов v1.0, проксирующий реплики пользователя в OpenAI Chat Completions.",
+        "title": "alisa-gpt",
+        "contact": {},
+        "version": "1.0"
+    },
+    "basePath": "/",
+    "paths": {
+        "/": {
+            "post": {
+                "description": "Единственная ручка навыка: принимает запрос вебхука Яндекс.Диалогов (протокол v1.0), зовёт ChatGPT и возвращает ответ для озвучивания. Ошибки LLM не роняют сессию — навык отвечает fallback-фразой.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "alisa"
+                ],
+                "summary": "Handle Alice webhook",
+                "parameters": [
+                    {
+                        "description": "Запрос вебхука Алисы",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/alisa-gpt_internal_models.AliceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/alisa-gpt_internal_models.AliceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Битный JSON запроса",
+                        "schema": {
+                            "$ref": "#/definitions/alisa-gpt_internal_models.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/alisa-gpt_internal_models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/healthcheck": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "meta"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "alisa-gpt_internal_models.AliceMeta": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "locale": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                }
+            }
+        },
+        "alisa-gpt_internal_models.AliceRequest": {
+            "type": "object",
+            "properties": {
+                "meta": {
+                    "$ref": "#/definitions/alisa-gpt_internal_models.AliceMeta"
+                },
+                "request": {
+                    "$ref": "#/definitions/alisa-gpt_internal_models.AliceRequestBody"
+                },
+                "session": {
+                    "$ref": "#/definitions/alisa-gpt_internal_models.AliceSession"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "alisa-gpt_internal_models.AliceRequestBody": {
+            "type": "object",
+            "properties": {
+                "command": {
+                    "type": "string"
+                },
+                "original_utterance": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "SimpleUtterance | ButtonPressed",
+                    "type": "string"
+                }
+            }
+        },
+        "alisa-gpt_internal_models.AliceResponse": {
+            "type": "object",
+            "properties": {
+                "response": {
+                    "$ref": "#/definitions/alisa-gpt_internal_models.AliceResponseBody"
+                },
+                "session": {
+                    "$ref": "#/definitions/alisa-gpt_internal_models.AliceSession"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "alisa-gpt_internal_models.AliceResponseBody": {
+            "type": "object",
+            "properties": {
+                "end_session": {
+                    "type": "boolean"
+                },
+                "text": {
+                    "type": "string"
+                },
+                "tts": {
+                    "type": "string"
+                }
+            }
+        },
+        "alisa-gpt_internal_models.AliceSession": {
+            "type": "object",
+            "properties": {
+                "message_id": {
+                    "type": "integer"
+                },
+                "new": {
+                    "type": "boolean"
+                },
+                "session_id": {
+                    "type": "string"
+                },
+                "skill_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "alisa-gpt_internal_models.ErrorDetail": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                }
+            }
+        },
+        "alisa-gpt_internal_models.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "$ref": "#/definitions/alisa-gpt_internal_models.ErrorDetail"
+                }
+            }
+        }
+    }
+}

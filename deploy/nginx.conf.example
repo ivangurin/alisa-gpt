@@ -1,0 +1,51 @@
+# Проксирование вебхука навыка Алисы на контейнер alisa-gpt.
+# Положить в /etc/nginx/sites-available/alisa-gpt, сделать симлинк в
+# sites-enabled, затем выпустить сертификат:
+#   sudo certbot --nginx -d alice.example.com
+# (certbot сам допишет ssl-блок и редирект 80 → 443)
+
+upstream alisa_gpt {
+    server 127.0.0.1:8080;
+    keepalive 16;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name alice.example.com;
+
+    # Алиса требует HTTPS: этот блок нужен только для certbot-челленджа,
+    # после выпуска сертификата весь трафик идёт через 443.
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name alice.example.com;
+
+    # Пути к сертификатам certbot подставит сам; при ручной установке
+    # укажите свои файлы.
+    ssl_certificate     /etc/letsencrypt/live/alice.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/alice.example.com/privkey.pem;
+
+    # Лимит Алисы на ответ вебхука — 4.5 с; читаем с запасом.
+    proxy_read_timeout 10s;
+    proxy_connect_timeout 3s;
+
+    location / {
+        proxy_pass http://alisa_gpt;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

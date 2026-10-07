@@ -1,0 +1,15 @@
+dir: "{{.InterfaceDir}}/mocks"
+mockname: "{{.InterfaceName}}"
+filename: "{{.InterfaceNameSnake}}.mock.go"
+outpkg: "mocks"
+include-regex: ".*"
+with-expecter: true
+issue-845-fix: true
+resolve-type-alias: false
+disable-version-string: true
+packages:
+  alisa-gpt/internal/clients/llm:
+    config:
+      include-regex: "^Client$"
+    interfaces:
+      Client:

@@ -1,0 +1,131 @@
+basePath: /
+definitions:
+  alisa-gpt_internal_models.AliceMeta:
+    properties:
+      client_id:
+        type: string
+      locale:
+        type: string
+      timezone:
+        type: string
+    type: object
+  alisa-gpt_internal_models.AliceRequest:
+    properties:
+      meta:
+        $ref: '#/definitions/alisa-gpt_internal_models.AliceMeta'
+      request:
+        $ref: '#/definitions/alisa-gpt_internal_models.AliceRequestBody'
+      session:
+        $ref: '#/definitions/alisa-gpt_internal_models.AliceSession'
+      version:
+        type: string
+    type: object
+  alisa-gpt_internal_models.AliceRequestBody:
+    properties:
+      command:
+        type: string
+      original_utterance:
+        type: string
+      type:
+        description: SimpleUtterance | ButtonPressed
+        type: string
+    type: object
+  alisa-gpt_internal_models.AliceResponse:
+    properties:
+      response:
+        $ref: '#/definitions/alisa-gpt_internal_models.AliceResponseBody'
+      session:
+        $ref: '#/definitions/alisa-gpt_internal_models.AliceSession'
+      version:
+        type: string
+    type: object
+  alisa-gpt_internal_models.AliceResponseBody:
+    properties:
+      end_session:
+        type: boolean
+      text:
+        type: string
+      tts:
+        type: string
+    type: object
+  alisa-gpt_internal_models.AliceSession:
+    properties:
+      message_id:
+        type: integer
+      new:
+        type: boolean
+      session_id:
+        type: string
+      skill_id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  alisa-gpt_internal_models.ErrorDetail:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+      source:
+        type: string
+    type: object
+  alisa-gpt_internal_models.ErrorResponse:
+    properties:
+      error:
+        $ref: '#/definitions/alisa-gpt_internal_models.ErrorDetail'
+    type: object
+info:
+  contact: {}
+  description: 'Навык Яндекс.Алисы для голосового общения с ChatGPT: вебхук протокола
+    Яндекс.Диалогов v1.0, проксирующий реплики пользователя в OpenAI Chat Completions.'
+  title: alisa-gpt
+  version: "1.0"
+paths:
+  /:
+    post:
+      consumes:
+      - application/json
+      description: 'Единственная ручка навыка: принимает запрос вебхука Яндекс.Диалогов
+        (протокол v1.0), зовёт ChatGPT и возвращает ответ для озвучивания. Ошибки
+        LLM не роняют сессию — навык отвечает fallback-фразой.'
+      parameters:
+      - description: Запрос вебхука Алисы
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/alisa-gpt_internal_models.AliceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/alisa-gpt_internal_models.AliceResponse'
+        "400":
+          description: Битный JSON запроса
+          schema:
+            $ref: '#/definitions/alisa-gpt_internal_models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/alisa-gpt_internal_models.ErrorResponse'
+      summary: Handle Alice webhook
+      tags:
+      - alisa
+  /healthcheck:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - meta
+swagger: "2.0"
